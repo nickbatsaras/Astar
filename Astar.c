@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
+#include <float.h>
 
 #define ROWS 10
 #define COLS 10
@@ -20,6 +21,9 @@ typedef struct Cell {
 
 Cell *openedList = NULL;
 Cell *closedList = NULL;
+
+
+unsigned int checkSrc = 1;
 
 
 void insert(Cell **list, Cell *cell)
@@ -104,10 +108,9 @@ void Astar(Cell graph[ROWS][COLS], Cell *src, Cell *dst)
     while (openedList) {
         Cell *curr = getNext(&openedList);
 
-        /* This will happen only once, at start */
-        if (isInside(&openedList, src)) {
+        if (checkSrc) {
             delete(&openedList, src);
-            insert(&closedList, src);
+            checkSrc = 0;
         }
 
         double g, h, f;
@@ -127,10 +130,8 @@ void Astar(Cell graph[ROWS][COLS], Cell *src, Cell *dst)
                 h = heuristic(&graph[curr->x-1][curr->y], dst);
                 f = g + h;
 
-                if (!isInside(&openedList, &graph[curr->x-1][curr->y])
-                        || graph[curr->x-1][curr->y].f > f) {
-
-                    if (!isInside(&openedList, &graph[curr->x-1][curr->y]))
+                if (graph[curr->x-1][curr->y].f > f) {
+                    if (graph[curr->x-1][curr->y].f == DBL_MAX)
                         insert(&openedList, &graph[curr->x-1][curr->y]);
 
                     graph[curr->x-1][curr->y].g = g;
@@ -156,10 +157,8 @@ void Astar(Cell graph[ROWS][COLS], Cell *src, Cell *dst)
                 h = heuristic(&graph[curr->x+1][curr->y], dst);
                 f = g + h;
 
-                if (!isInside(&openedList, &graph[curr->x+1][curr->y])
-                        || graph[curr->x+1][curr->y].f > f) {
-
-                    if (!isInside(&openedList, &graph[curr->x+1][curr->y]))
+                if (graph[curr->x+1][curr->y].f > f) {
+                    if (graph[curr->x+1][curr->y].f == DBL_MAX)
                         insert(&openedList, &graph[curr->x+1][curr->y]);
 
                     graph[curr->x+1][curr->y].g = g;
@@ -185,10 +184,8 @@ void Astar(Cell graph[ROWS][COLS], Cell *src, Cell *dst)
                 h = heuristic(&graph[curr->x][curr->y+1], dst);
                 f = g + h;
 
-                if (!isInside(&openedList, &graph[curr->x][curr->y+1])
-                        || graph[curr->x][curr->y+1].f > f) {
-
-                    if (!isInside(&openedList, &graph[curr->x][curr->y+1]))
+                if (graph[curr->x][curr->y+1].f > f) {
+                    if (graph[curr->x][curr->y+1].f == DBL_MAX)
                         insert(&openedList, &graph[curr->x][curr->y+1]);
 
                     graph[curr->x][curr->y+1].g = g;
@@ -214,10 +211,8 @@ void Astar(Cell graph[ROWS][COLS], Cell *src, Cell *dst)
                 h = heuristic(&graph[curr->x][curr->y-1], dst);
                 f = g + h;
 
-                if (!isInside(&openedList, &graph[curr->x][curr->y-1])
-                        || graph[curr->x][curr->y-1].f > f) {
-
-                    if (!isInside(&openedList, &graph[curr->x][curr->y-1]))
+                if (graph[curr->x][curr->y-1].f > f) {
+                    if (graph[curr->x][curr->y-1].f == DBL_MAX)
                         insert(&openedList, &graph[curr->x][curr->y-1]);
 
                     graph[curr->x][curr->y-1].g = g;
@@ -229,10 +224,7 @@ void Astar(Cell graph[ROWS][COLS], Cell *src, Cell *dst)
         }
 
         delete(&openedList, curr);
-
-        //Only for start
-        if (!isInside(&closedList, curr))
-            insert(&closedList, curr);
+        insert(&closedList, curr);
     }
 }
 
@@ -260,7 +252,7 @@ int main(int argc, char *argv[])
         for (j=0; j<COLS; j++) {
             graph[i][j].h = 0;
             graph[i][j].g = 0;
-            graph[i][j].f = 0;
+            graph[i][j].f = DBL_MAX;
             graph[i][j].x = i;
             graph[i][j].y = j;
             graph[i][j].blocked = matrix[i][j];
