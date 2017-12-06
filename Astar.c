@@ -3,9 +3,11 @@
 #include <math.h>
 #include <float.h>
 
-#define ROWS 10
-#define COLS 10
-
+#define FAIL(msg) {\
+    fprintf(stderr, "Error [%s:%d]: "msg"\n",\
+            __FILE__, __LINE__);\
+    exit(EXIT_FAILURE);\
+}
 
 typedef struct Cell {
     double h;              /* Heuristic value                  */
@@ -22,6 +24,9 @@ typedef struct Cell {
 Cell *openedList = NULL;
 Cell *closedList = NULL;
 
+Cell **graph = NULL;
+unsigned int rows;
+unsigned int cols;
 
 unsigned int checkSrc = 1;
 
@@ -84,7 +89,7 @@ Cell *getNext(Cell **list)
 
 unsigned int isValid(int row, int col)
 {
-    if ((row >= 0 && row < ROWS) && (col >= 0 && col < COLS))
+    if ((row >= 0 && row < rows) && (col >= 0 && col < cols))
         return 1;
     return 0;
 }
@@ -94,7 +99,7 @@ unsigned int heuristic(Cell *src, Cell *dst)
     return abs(src->x - dst->x) + abs(src->y - dst->y);
 }
 
-void trace(Cell graph[ROWS][COLS], Cell *dst)
+void trace(Cell **graph, Cell *dst)
 {
     while (dst) {
         printf("(%d, %d)\n", dst->x, dst->y);
@@ -103,7 +108,7 @@ void trace(Cell graph[ROWS][COLS], Cell *dst)
 }
 
 
-void Astar(Cell graph[ROWS][COLS], Cell *src, Cell *dst)
+void Astar(Cell **graph, Cell *src, Cell *dst)
 {
     while (openedList) {
         Cell *curr = getNext(&openedList);
@@ -228,41 +233,50 @@ void Astar(Cell graph[ROWS][COLS], Cell *src, Cell *dst)
     }
 }
 
-
-int main(int argc, char *argv[])
+void parseGraph(const char *file)
 {
     int i, j;
+    FILE *map = NULL;
 
-    int matrix[ROWS][COLS] = {
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 1, 1, 0, 1, 1, 1, 1, 1},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
-        {0, 0, 0, 0, 0, 0, 0, 0, 0, 0}
-    };
+    if (!(map = fopen(file, "r")))
+        FAIL("Can't open map file");
 
-    Cell graph[ROWS][COLS];
+    fscanf(map, "%d", &rows);
+    fscanf(map, "%d", &cols);
 
-    for (i=0; i<ROWS; i++) {
-        for (j=0; j<COLS; j++) {
+    if (!(graph = (Cell **)malloc(rows*sizeof(Cell *))))
+        FAIL("Can't allocate graph");
+
+    for (i=0; i<rows; i++)
+        if (!(graph[i] = (Cell *)malloc(cols*sizeof(Cell))))
+            FAIL("Can't allocate graph");
+
+    for (i=0; i<rows; i++) {
+        for (j=0; j<cols; j++) {
             graph[i][j].h = 0;
             graph[i][j].g = 0;
             graph[i][j].f = DBL_MAX;
             graph[i][j].x = i;
             graph[i][j].y = j;
-            graph[i][j].blocked = matrix[i][j];
+
+            fscanf(map, "%d", &graph[i][j].blocked);
+
             graph[i][j].parent = NULL;
             graph[i][j].next = NULL;
         }
     }
 
-    Cell *src = &graph[0][0];
-    Cell *dst = &graph[9][9];
+    fclose(map);
+}
+
+int main(int argc, char *argv[])
+{
+    Cell *src, *dst;
+
+    parseGraph("map.txt");
+
+    src = &graph[0][0];
+    dst = &graph[9][9];
 
     insert(&openedList, src);
 
