@@ -44,6 +44,9 @@ Cell *closedList = NULL;
 Cell **graph = NULL;
 
 
+Cell *source;      /* The source cell      */
+Cell *destination; /* The destination cell */
+
 unsigned int rows; /* The number of rows in the graph    */
 unsigned int cols; /* The number of columns in the graph */
 
@@ -287,16 +290,26 @@ void Astar(Cell *src, Cell *dst)
  * - 0: Non-blocking cell
  * - 1: Blocking cell
  */
-void parseGraph(const char *file)
+void parseGraph(int argc, char *argv[])
 {
     int i, j;
     FILE *map = NULL;
 
-    if (!(map = fopen(file, "r")))
+    if (argc != 6)
+        FAIL("\n\nUsage: \n"
+                "\t./Astar <map.txt> <srcx> <srcy> <dstx> <dsty>\n");
+
+    if (!(map = fopen(argv[1], "r")))
         FAIL("Can't open map file");
 
     fscanf(map, "%d", &rows);
     fscanf(map, "%d", &cols);
+
+    if (atoi(argv[2]) < 0 || atoi(argv[2]) >= rows
+            || atoi(argv[3]) < 0 || atoi(argv[3]) >= cols
+            || atoi(argv[4]) < 0 || atoi(argv[4]) >= rows
+            || atoi(argv[5]) < 0 || atoi(argv[5]) >= cols)
+        FAIL("Invalid coordinates");
 
     if (!(graph = (Cell **)malloc(rows*sizeof(Cell *))))
         FAIL("Can't allocate graph");
@@ -321,6 +334,11 @@ void parseGraph(const char *file)
     }
 
     fclose(map);
+
+    source = &graph[atoi(argv[2])][atoi(argv[3])];
+    destination = &graph[atoi(argv[4])][atoi(argv[5])];
+
+    insert(&openedList, source);
 }
 
 /*
@@ -340,16 +358,9 @@ void free_all()
  */
 int main(int argc, char *argv[])
 {
-    Cell *src, *dst;
+    parseGraph(argc, argv);
 
-    parseGraph("map.txt");
-
-    src = &graph[0][0];
-    dst = &graph[9][9];
-
-    insert(&openedList, src);
-
-    Astar(src, dst);
+    Astar(source, destination);
 
     free_all();
     return 0;
