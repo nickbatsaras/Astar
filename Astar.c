@@ -22,6 +22,7 @@ typedef struct Cell {
     unsigned int x;        /* The row of the cell              */
     unsigned int y;        /* The column of the cell           */
     unsigned int blocked;  /* True or false                    */
+    unsigned int path;     /* True or false                    */
     struct Cell *parent;   /* Node to reach this node          */
     struct Cell *next;     /* Pointer to next node on the list */
 } Cell;
@@ -141,7 +142,8 @@ unsigned int isValid(int row, int col)
  */
 unsigned int heuristic(Cell *cell, Cell *dst)
 {
-    return abs(cell->x - dst->x) + abs(cell->y - dst->y);
+    /* return abs(cell->x - dst->x) + abs(cell->y - dst->y); */
+    return sqrt (pow(cell->x - dst->x, 2) + pow(cell->y - dst->y, 2));
 }
 
 /*
@@ -149,10 +151,26 @@ unsigned int heuristic(Cell *cell, Cell *dst)
  */
 void trace(Cell *dst)
 {
+    int i, j;
+
     while (dst) {
-        printf("(%d, %d)\n", dst->x, dst->y);
+        dst->path = 1;
         dst = dst->parent;
     }
+
+    printf("\t\t");
+    for (i=0; i<rows; i++) {
+        for (j=0; j<cols; j++) {
+            if (graph[i][j].blocked)
+                printf("X ");
+            else if (graph[i][j].path)
+                printf("* ");
+            else
+                printf("- ");
+        }
+        printf("\n\t\t");
+    }
+    printf("\n");
 }
 
 /*
@@ -174,7 +192,10 @@ void Astar(Cell *src, Cell *dst)
         /* North */
         if (isValid(curr->x-1, curr->y)) {
             if (curr == dst) {
-                printf("Path found!!!\n");
+                printf(
+                        "\t\t--------------------\n"
+                        "\t\t|  Path found !!!  |\n"
+                        "\t\t--------------------\n\n");
                 trace(dst);
                 return;
             }
@@ -328,6 +349,7 @@ void parseGraph(int argc, char *argv[])
 
             fscanf(map, "%d", &graph[i][j].blocked);
 
+            graph[i][j].path = 0;
             graph[i][j].parent = NULL;
             graph[i][j].next = NULL;
         }
