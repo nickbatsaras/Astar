@@ -142,8 +142,8 @@ unsigned int isValid(int row, int col)
  */
 unsigned int heuristic(Cell *cell, Cell *dst)
 {
-    /* return abs(cell->x - dst->x) + abs(cell->y - dst->y); */
-    return sqrt (pow(cell->x - dst->x, 2) + pow(cell->y - dst->y, 2));
+    return abs(cell->x - dst->x) + abs(cell->y - dst->y);
+    /* return sqrt (pow(cell->x - dst->x, 2) + pow(cell->y - dst->y, 2)); */
 }
 
 /*
@@ -203,13 +203,13 @@ void Astar(Cell *src, Cell *dst)
             if (!isInside(&closedList, &graph[curr->x-1][curr->y])
                     && !graph[curr->x-1][curr->y].blocked) {
 
+                g = curr->g + 1.0;
+                h = heuristic(&graph[curr->x-1][curr->y], dst);
+                f = g + h;
+
                 if (graph[curr->x-1][curr->y].f > f) {
                     if (graph[curr->x-1][curr->y].f == DBL_MAX)
                         insert(&openedList, &graph[curr->x-1][curr->y]);
-
-                    g = curr->g + 1.0;
-                    h = heuristic(&graph[curr->x-1][curr->y], dst);
-                    f = g + h;
 
                     graph[curr->x-1][curr->y].g = g;
                     graph[curr->x-1][curr->y].h = h;
@@ -230,13 +230,13 @@ void Astar(Cell *src, Cell *dst)
             if (!isInside(&closedList, &graph[curr->x+1][curr->y])
                     && !graph[curr->x+1][curr->y].blocked) {
 
+                g = curr->g + 1.0;
+                h = heuristic(&graph[curr->x+1][curr->y], dst);
+                f = g + h;
+
                 if (graph[curr->x+1][curr->y].f > f) {
                     if (graph[curr->x+1][curr->y].f == DBL_MAX)
                         insert(&openedList, &graph[curr->x+1][curr->y]);
-
-                    g = curr->g + 1.0;
-                    h = heuristic(&graph[curr->x+1][curr->y], dst);
-                    f = g + h;
 
                     graph[curr->x+1][curr->y].g = g;
                     graph[curr->x+1][curr->y].h = h;
@@ -257,13 +257,13 @@ void Astar(Cell *src, Cell *dst)
             if (!isInside(&closedList, &graph[curr->x][curr->y+1])
                     && !graph[curr->x][curr->y+1].blocked) {
 
+                g = curr->g + 1.0;
+                h = heuristic(&graph[curr->x][curr->y+1], dst);
+                f = g + h;
+
                 if (graph[curr->x][curr->y+1].f > f) {
                     if (graph[curr->x][curr->y+1].f == DBL_MAX)
                         insert(&openedList, &graph[curr->x][curr->y+1]);
-
-                    g = curr->g + 1.0;
-                    h = heuristic(&graph[curr->x][curr->y+1], dst);
-                    f = g + h;
 
                     graph[curr->x][curr->y+1].g = g;
                     graph[curr->x][curr->y+1].h = h;
@@ -284,13 +284,13 @@ void Astar(Cell *src, Cell *dst)
             if (!isInside(&closedList, &graph[curr->x][curr->y-1])
                     && !graph[curr->x][curr->y-1].blocked) {
 
+                g = curr->g + 1.0;
+                h = heuristic(&graph[curr->x][curr->y-1], dst);
+                f = g + h;
+
                 if (graph[curr->x][curr->y-1].f > f) {
                     if (graph[curr->x][curr->y-1].f == DBL_MAX)
                         insert(&openedList, &graph[curr->x][curr->y-1]);
-
-                    g = curr->g + 1.0;
-                    h = heuristic(&graph[curr->x][curr->y-1], dst);
-                    f = g + h;
 
                     graph[curr->x][curr->y-1].g = g;
                     graph[curr->x][curr->y-1].h = h;
