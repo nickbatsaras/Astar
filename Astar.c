@@ -147,15 +147,24 @@ unsigned int heuristic(Cell *cell)
 void trace()
 {
     int i, j;
+    Cell *dst = destination;
 
-    while (destination) {
-        destination->path = 1;
-        destination = destination->parent;
+    while (dst) {
+        dst->path = 1;
+        dst = dst->parent;
     }
 
     printf("\n\t\t");
     for (i=0; i<rows; i++) {
         for (j=0; j<cols; j++) {
+            if (&graph[i][j] == source) {
+                printf("S ");
+                continue;
+            }
+            if (&graph[i][j] == destination) {
+                printf("D ");
+                continue;
+            }
             if (graph[i][j].blocked)
                 printf("X ");
             else if (graph[i][j].path)
@@ -350,7 +359,7 @@ void Astar_exit()
 {
     int i, j;
     for (i=0; i<rows; i++)
-            free(graph[i]);
+        free(graph[i]);
     free(graph);
 }
 
