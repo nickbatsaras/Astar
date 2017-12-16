@@ -7,8 +7,7 @@
 #include <float.h>
 
 #define FAIL(msg) {\
-    fprintf(stderr, "Error [%s:%d]: "msg"\n",\
-            __FILE__, __LINE__);\
+    fprintf(stderr, "Error [%s:%d]: "msg"\n",  __FILE__, __LINE__);\
     exit(EXIT_FAILURE);\
 }
 
@@ -50,12 +49,6 @@ Cell *destination; /* The destination cell */
 
 unsigned int rows; /* The number of rows in the graph    */
 unsigned int cols; /* The number of columns in the graph */
-
-/*
- * A flag to delete the source from the opened list
- * right after we enter the loop
- */
-unsigned int checkSrc = 1;
 
 
 /*
@@ -143,25 +136,24 @@ unsigned int isValid(int row, int col)
 /*
  * Calculates the heuristic value of a cell
  */
-unsigned int heuristic(Cell *cell, Cell *dst)
+unsigned int heuristic(Cell *cell)
 {
-    return abs(cell->x - dst->x) + abs(cell->y - dst->y);
-    /* return sqrt (pow(cell->x - dst->x, 2) + pow(cell->y - dst->y, 2)); */
+    return abs(cell->x - destination->x) + abs(cell->y - destination->y);
 }
 
 /*
  * Prints the path from destination to source
  */
-void trace(Cell *dst)
+void trace()
 {
     int i, j;
 
-    while (dst) {
-        dst->path = 1;
-        dst = dst->parent;
+    while (destination) {
+        destination->path = 1;
+        destination = destination->parent;
     }
 
-    printf("\t\t");
+    printf("\n\t\t");
     for (i=0; i<rows; i++) {
         for (j=0; j<cols; j++) {
             if (graph[i][j].blocked)
@@ -180,26 +172,17 @@ void trace(Cell *dst)
  * The A* algorithm. Calculates the path from destination
  * to source. We do not allow diagonal movement.
  */
-void Astar(Cell *src, Cell *dst)
+void Astar(void)
 {
     double g, h, f;
 
     while (openedList) {
         Cell *curr = getNext(&openedList);
 
-        if (checkSrc) {
-            delete(&openedList, src);
-            checkSrc = 0;
-        }
-
         /* North */
         if (isValid(curr->x-1, curr->y)) {
-            if (curr == dst) {
-                printf(
-                        "\t\t--------------------\n"
-                        "\t\t|  Path found !!!  |\n"
-                        "\t\t--------------------\n\n");
-                trace(dst);
+            if (curr == destination) {
+                trace();
                 return;
             }
 
@@ -207,7 +190,7 @@ void Astar(Cell *src, Cell *dst)
                     && !graph[curr->x-1][curr->y].blocked) {
 
                 g = curr->g + 1.0;
-                h = heuristic(&graph[curr->x-1][curr->y], dst);
+                h = heuristic(&graph[curr->x-1][curr->y]);
                 f = g + h;
 
                 if (graph[curr->x-1][curr->y].f > f) {
@@ -224,9 +207,8 @@ void Astar(Cell *src, Cell *dst)
 
         /* South */
         if (isValid(curr->x+1, curr->y)) {
-            if (curr == dst) {
-                printf("Path found!!!\n");
-                trace(dst);
+            if (curr == destination) {
+                trace();
                 return;
             }
 
@@ -234,7 +216,7 @@ void Astar(Cell *src, Cell *dst)
                     && !graph[curr->x+1][curr->y].blocked) {
 
                 g = curr->g + 1.0;
-                h = heuristic(&graph[curr->x+1][curr->y], dst);
+                h = heuristic(&graph[curr->x+1][curr->y]);
                 f = g + h;
 
                 if (graph[curr->x+1][curr->y].f > f) {
@@ -251,9 +233,8 @@ void Astar(Cell *src, Cell *dst)
 
         /* East */
         if (isValid(curr->x, curr->y+1)) {
-            if (curr == dst) {
-                printf("Path found!!!\n");
-                trace(dst);
+            if (curr == destination) {
+                trace();
                 return;
             }
 
@@ -261,7 +242,7 @@ void Astar(Cell *src, Cell *dst)
                     && !graph[curr->x][curr->y+1].blocked) {
 
                 g = curr->g + 1.0;
-                h = heuristic(&graph[curr->x][curr->y+1], dst);
+                h = heuristic(&graph[curr->x][curr->y+1]);
                 f = g + h;
 
                 if (graph[curr->x][curr->y+1].f > f) {
@@ -278,9 +259,8 @@ void Astar(Cell *src, Cell *dst)
 
         /* West */
         if (isValid(curr->x, curr->y-1)) {
-            if (curr == dst) {
-                printf("Path found!!!\n");
-                trace(dst);
+            if (curr == destination) {
+                trace();
                 return;
             }
 
@@ -288,7 +268,7 @@ void Astar(Cell *src, Cell *dst)
                     && !graph[curr->x][curr->y-1].blocked) {
 
                 g = curr->g + 1.0;
-                h = heuristic(&graph[curr->x][curr->y-1], dst);
+                h = heuristic(&graph[curr->x][curr->y-1]);
                 f = g + h;
 
                 if (graph[curr->x][curr->y-1].f > f) {
@@ -311,14 +291,14 @@ void Astar(Cell *src, Cell *dst)
  * - 0: Non-blocking cell
  * - 1: Blocking cell
  */
-void parseGraph(int argc, char *argv[])
+void Astar_parse_graph(int argc, char *argv[])
 {
     int i, j;
     FILE *map = NULL;
 
     if (argc != 6)
         FAIL("\n\nUsage: \n"
-                "\t./Astar <map.txt> <srcx> <srcy> <dstx> <dsty>\n");
+                "\t./Astar <map.txt> <srcx> <srcy> <destinationx> <dsty>\n");
 
     if (!(map = fopen(argv[1], "r")))
         FAIL("Can't open map file");
@@ -366,10 +346,9 @@ void parseGraph(int argc, char *argv[])
 /*
  * Frees resources
  */
-void free_all()
+void Astar_exit()
 {
     int i, j;
-
     for (i=0; i<rows; i++)
             free(graph[i]);
     free(graph);
@@ -380,10 +359,11 @@ void free_all()
  */
 int main(int argc, char *argv[])
 {
-    parseGraph(argc, argv);
+    Astar_parse_graph(argc, argv);
 
-    Astar(source, destination);
+    Astar();
 
-    free_all();
+    Astar_exit();
+
     return 0;
 }
