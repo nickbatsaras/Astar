@@ -124,6 +124,9 @@ Cell *getNext(Cell **list)
         curr = curr->next;
     }
 
+    delete(&openedList, min);
+    insert(&closedList, min);
+
     return min;
 }
 
@@ -299,9 +302,6 @@ void Astar(Cell *src, Cell *dst)
                 }
             }
         }
-
-        delete(&openedList, curr);
-        insert(&closedList, curr);
     }
 }
 
