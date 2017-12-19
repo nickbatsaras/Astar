@@ -3,7 +3,6 @@
  */
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <float.h>
 
 #define FAIL(msg) {\
@@ -21,6 +20,7 @@ typedef struct Cell {
     unsigned int x;        /* The row of the cell              */
     unsigned int y;        /* The column of the cell           */
     unsigned int blocked;  /* True or false                    */
+    unsigned int inClosed; /* Inside closed list               */
     unsigned int path;     /* True or false                    */
     struct Cell *parent;   /* Node to reach this node          */
     struct Cell *next;     /* Pointer to next node on the list */
@@ -32,11 +32,6 @@ typedef struct Cell {
  * nodes that we've visited
  */
 Cell *openedList = NULL;
-
-/*
- * The list containing all the nodes we've visited
- */
-Cell *closedList = NULL;
 
 /*
  * The graph is nothing more than a 2D array of Cells
@@ -87,22 +82,6 @@ void delete(Cell **list, Cell *cell)
 }
 
 /*
- * Checks if a cell exists in a list
- */
-unsigned int isInside(Cell **list, Cell *cell)
-{
-    Cell *curr = *list;
-
-    while (curr) {
-        if (curr->x == cell->x && curr->y == cell->y)
-            return 1;
-        curr = curr->next;
-    }
-
-    return 0;
-}
-
-/*
  * Returns the cell with the minimum f value
  * in the openedList
  */
@@ -117,8 +96,10 @@ Cell *getNext(Cell **list)
         curr = curr->next;
     }
 
+    /* This is slow ! */
     delete(&openedList, min);
-    insert(&closedList, min);
+
+    min->inClosed = 1;
 
     return min;
 }
@@ -195,7 +176,7 @@ void Astar(void)
                 return;
             }
 
-            if (!isInside(&closedList, &graph[curr->x-1][curr->y])
+            if (!graph[curr->x-1][curr->y].inClosed
                     && !graph[curr->x-1][curr->y].blocked) {
 
                 g = curr->g + 1.0;
@@ -221,7 +202,7 @@ void Astar(void)
                 return;
             }
 
-            if (!isInside(&closedList, &graph[curr->x+1][curr->y])
+            if (!graph[curr->x+1][curr->y].inClosed
                     && !graph[curr->x+1][curr->y].blocked) {
 
                 g = curr->g + 1.0;
@@ -247,7 +228,7 @@ void Astar(void)
                 return;
             }
 
-            if (!isInside(&closedList, &graph[curr->x][curr->y+1])
+            if (!graph[curr->x][curr->y+1].inClosed
                     && !graph[curr->x][curr->y+1].blocked) {
 
                 g = curr->g + 1.0;
@@ -273,7 +254,7 @@ void Astar(void)
                 return;
             }
 
-            if (!isInside(&closedList, &graph[curr->x][curr->y-1])
+            if (!graph[curr->x][curr->y-1].inClosed
                     && !graph[curr->x][curr->y-1].blocked) {
 
                 g = curr->g + 1.0;
