@@ -91,10 +91,12 @@ void delete(Cell **list, Cell *cell)
  */
 Cell *getNext(Cell **list)
 {
-    Cell *min = *list;
-    Cell *curr = (*list)->next;
+    Cell *min = NULL;
+    Cell *curr = *list;
 
     while (curr) {
+        if (!min && !curr->inClosed)
+            min = curr;
         if (!curr->inClosed && curr->f < min->f)
             min = curr;
         curr = curr->next;
@@ -103,7 +105,8 @@ Cell *getNext(Cell **list)
     /* This is slow ! */
     /* delete(&openedList, min); */
 
-    min->inClosed = 1;
+    if (min)
+        min->inClosed = 1;
 
     return min;
 }
@@ -131,7 +134,7 @@ unsigned int heuristic(Cell *cell)
  */
 void trace()
 {
-    return;
+    /* return; */
     int i, j;
     Cell *dst = destination;
 
@@ -173,6 +176,7 @@ void Astar(void)
 
     while (openedList) {
         Cell *curr = getNext(&openedList);
+        if (!curr) break;
 
         /* North */
         if (isValid(curr->x-1, curr->y)) {
@@ -347,6 +351,10 @@ void Astar_exit()
     for (i=0; i<rows; i++)
         free(graph[i]);
     free(graph);
+
+    printf ("Total time = %f seconds\n",
+            (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
+            (double) (tv2.tv_sec - tv1.tv_sec));
 }
 
 /*
@@ -359,10 +367,6 @@ int main(int argc, char *argv[])
     gettimeofday(&tv1, NULL);
     Astar();
     gettimeofday(&tv2, NULL);
-
-    printf ("Total time = %f seconds\n",
-            (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
-            (double) (tv2.tv_sec - tv1.tv_sec));
 
     Astar_exit();
 
