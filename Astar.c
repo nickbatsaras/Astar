@@ -95,13 +95,13 @@ Cell *getNext(Cell **list)
     Cell *curr = (*list)->next;
 
     while (curr) {
-        if (curr->f < min->f)
+        if (!curr->inClosed && curr->f < min->f)
             min = curr;
         curr = curr->next;
     }
 
     /* This is slow ! */
-    delete(&openedList, min);
+    /* delete(&openedList, min); */
 
     min->inClosed = 1;
 
