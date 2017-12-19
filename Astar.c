@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <float.h>
+#include <sys/time.h>
 
 #define FAIL(msg) {\
     fprintf(stderr, "Error [%s:%d]: "msg"\n",  __FILE__, __LINE__);\
@@ -44,6 +45,9 @@ Cell *destination; /* The destination cell */
 
 unsigned int rows; /* The number of rows in the graph    */
 unsigned int cols; /* The number of columns in the graph */
+
+
+struct timeval tv1, tv2;
 
 
 /*
@@ -127,6 +131,7 @@ unsigned int heuristic(Cell *cell)
  */
 void trace()
 {
+    return;
     int i, j;
     Cell *dst = destination;
 
@@ -351,7 +356,13 @@ int main(int argc, char *argv[])
 {
     Astar_parse_graph(argc, argv);
 
+    gettimeofday(&tv1, NULL);
     Astar();
+    gettimeofday(&tv2, NULL);
+
+    printf ("Total time = %f seconds\n",
+            (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
+            (double) (tv2.tv_sec - tv1.tv_sec));
 
     Astar_exit();
 
