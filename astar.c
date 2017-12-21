@@ -22,7 +22,9 @@ typedef struct Cell {
     unsigned int y;        /* The column of the cell           */
     unsigned int blocked;  /* True or false                    */
     unsigned int inClosed; /* Inside closed list               */
+#ifdef TRACE
     unsigned int path;     /* True or false                    */
+#endif
     struct Cell *parent;   /* Node to reach this node          */
     struct Cell *next;     /* Pointer to next node on the list */
 } Cell;
@@ -62,30 +64,6 @@ void insert(Cell **list, Cell *cell)
 }
 
 /*
- * Deletes cells from the above lists
- */
-void delete(Cell **list, Cell *cell)
-{
-    Cell *prev = NULL;
-    Cell *curr = *list;
-
-    while (curr) {
-        if (curr->x == cell->x && curr->y == cell->y) {
-            if (!prev) {
-                *list = curr->next;
-            }
-            else {
-                prev->next = curr->next;
-                curr->next = NULL;
-            }
-            return;
-        }
-        prev = curr;
-        curr = curr->next;
-    }
-}
-
-/*
  * Returns the cell with the minimum f value
  * in the openedList
  */
@@ -101,9 +79,6 @@ Cell *getNext(Cell **list)
             min = curr;
         curr = curr->next;
     }
-
-    /* This is slow ! */
-    /* delete(&openedList, min); */
 
     if (min)
         min->inClosed = 1;
@@ -134,7 +109,7 @@ unsigned int heuristic(Cell *cell)
  */
 void trace()
 {
-    /* return; */
+#ifdef TRACE
     int i, j;
     Cell *dst = destination;
 
@@ -164,6 +139,7 @@ void trace()
         printf("\n\t\t");
     }
     printf("\n");
+#endif
 }
 
 /*
@@ -174,13 +150,19 @@ void Astar(void)
 {
     double g, h, f;
 
+    gettimeofday(&tv1, NULL);
+
     while (openedList) {
         Cell *curr = getNext(&openedList);
-        if (!curr) break;
+        if (!curr) {
+            gettimeofday(&tv2, NULL);
+            break;
+        }
 
         /* North */
         if (isValid(curr->x-1, curr->y)) {
             if (curr == destination) {
+                gettimeofday(&tv2, NULL);
                 trace();
                 return;
             }
@@ -207,6 +189,7 @@ void Astar(void)
         /* South */
         if (isValid(curr->x+1, curr->y)) {
             if (curr == destination) {
+                gettimeofday(&tv2, NULL);
                 trace();
                 return;
             }
@@ -233,6 +216,7 @@ void Astar(void)
         /* East */
         if (isValid(curr->x, curr->y+1)) {
             if (curr == destination) {
+                gettimeofday(&tv2, NULL);
                 trace();
                 return;
             }
@@ -259,6 +243,7 @@ void Astar(void)
         /* West */
         if (isValid(curr->x, curr->y-1)) {
             if (curr == destination) {
+                gettimeofday(&tv2, NULL);
                 trace();
                 return;
             }
@@ -297,7 +282,7 @@ void Astar_parse_graph(int argc, char *argv[])
 
     if (argc != 6)
         FAIL("\n\nUsage: \n"
-                "\t./Astar <map.txt> <srcx> <srcy> <destinationx> <dsty>\n");
+                "\t./Astar <map.txt> <srcx> <srcy> <dstx> <dsty>\n");
 
     if (!(map = fopen(argv[1], "r")))
         FAIL("Can't open map file");
@@ -328,7 +313,9 @@ void Astar_parse_graph(int argc, char *argv[])
 
             fscanf(map, "%d", &graph[i][j].blocked);
 
+#ifdef TRACE
             graph[i][j].path = 0;
+#endif
             graph[i][j].parent = NULL;
             graph[i][j].next = NULL;
         }
@@ -347,12 +334,13 @@ void Astar_parse_graph(int argc, char *argv[])
  */
 void Astar_exit()
 {
-    int i, j;
+    int i;
+
     for (i=0; i<rows; i++)
         free(graph[i]);
     free(graph);
 
-    printf ("Total time = %f seconds\n",
+    printf ("\nTotal time = %f seconds\n\n",
             (double) (tv2.tv_usec - tv1.tv_usec) / 1000000 +
             (double) (tv2.tv_sec - tv1.tv_sec));
 }
@@ -364,9 +352,7 @@ int main(int argc, char *argv[])
 {
     Astar_parse_graph(argc, argv);
 
-    gettimeofday(&tv1, NULL);
     Astar();
-    gettimeofday(&tv2, NULL);
 
     Astar_exit();
 
